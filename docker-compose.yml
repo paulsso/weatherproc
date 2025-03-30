@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: weather_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=weather_user
+      - MONGO_INITDB_ROOT_PASSWORD=weather_password
+    networks:
+      - weather_network
+
+  weather_script:
+    build:
+      context: ./python-scripts
+      dockerfile: Dockerfile
+    container_name: weather_script
+    depends_on:
+      - mongodb
+    environment:
+      - MONGODB_URI=mongodb://weather_user:weather_password@mongodb:27017/
+      - METOBS_URL=${METOBS_URL}
+      - SMHI_PARAMETER=${SMHI_PARAMETER}
+      - SMHI_STATION_SET=${SMHI_STATION_SET}
+      - SMHI_PERIOD=${SMHI_PERIOD}
+    volumes:
+      - ./python-scripts:/app
+    networks:
+      - weather_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  weather_network:
+    driver: bridge 
