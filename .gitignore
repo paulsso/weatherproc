@@ -31,8 +31,9 @@
 *.out
 *.app
 
-# CSV files
+# data files
 *.csv
+*.json
 
 
 # Virtual environment
