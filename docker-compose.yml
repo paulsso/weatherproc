@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mongodb:
     image: mongo:latest
@@ -21,19 +19,37 @@ services:
     container_name: weather_script
     depends_on:
       - mongodb
-    environment:
-      - MONGODB_URI=mongodb://weather_user:weather_password@mongodb:27017/
-      - METOBS_URL=${METOBS_URL}
-      - SMHI_PARAMETER=${SMHI_PARAMETER}
-      - SMHI_STATION_SET=${SMHI_STATION_SET}
-      - SMHI_PERIOD=${SMHI_PERIOD}
     volumes:
       - ./python-scripts:/app
     networks:
       - weather_network
+    command: >
+      bash -c "
+        python get_data.py &&
+        python stash_data.py
+      "
+
+  jupyter:
+    build:
+      context: ./python-scripts
+      dockerfile: Dockerfile
+    container_name: weather_jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./python-scripts:/app
+      - jupyter_data:/root/.local/share/jupyter
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    depends_on:
+      - mongodb
+    networks:
+      - weather_network
+    command: jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root
 
 volumes:
   mongodb_data:
+  jupyter_data:
 
 networks:
   weather_network:
